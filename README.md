@@ -1,4 +1,4 @@
-# 🏢 LSREMS - Land Surveying & Real Estate Management System
+# LSREMS - Land Surveying & Real Estate Management System
 
 A comprehensive full-stack web application for managing land surveying operations and real estate business processes.
 
@@ -7,21 +7,21 @@ A comprehensive full-stack web application for managing land surveying operation
 ![Frontend](https://img.shields.io/badge/frontend-React%2018-blue)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-## 🎯 Overview
+Overview
 
 LSREMS is a modern, full-featured management system designed for surveying companies and real estate businesses. It provides tools for managing survey projects, land title documents, property listings, customer relationships, and transactions.
 
-## ✨ Features
+##  Features
 
 ### Core Modules
-- 🔐 **User Management** - Role-based access control (Admin, Surveyor, Real Estate Manager, Customer)
-- 👥 **Customer Management** - Comprehensive client relationship management
-- 📋 **Survey Project Management** - Track projects through complete workflow
-- 📄 **Land Title Documents** - Upload, store, and manage survey documents
-- 🏠 **Property Management** - Manage real estate inventory
-- 💰 **Property Listings** - List properties for sale or rent
-- 💳 **Transaction Management** - Track sales and rental agreements
-- 📊 **Dashboard & Reports** - Real-time statistics and reporting
+-  **User Management** - Role-based access control (Admin, Surveyor, Real Estate Manager, Customer)
+-  **Customer Management** - Comprehensive client relationship management
+-  **Survey Project Management** - Track projects through complete workflow
+-  **Land Title Documents** - Upload, store, and manage survey documents
+-  **Property Management** - Manage real estate inventory
+-  **Property Listings** - List properties for sale or rent
+-  **Transaction Management** - Track sales and rental agreements
+-  **Dashboard & Reports** - Real-time statistics and reporting
 
 ### Technical Features
 - RESTful API with 40+ endpoints
@@ -33,7 +33,7 @@ LSREMS is a modern, full-featured management system designed for surveying compa
 - Form validation
 - Role-based permissions
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 ### Backend
 - **Framework:** Django 4.2.4
@@ -50,7 +50,7 @@ LSREMS is a modern, full-featured management system designed for surveying compa
 - **HTTP Client:** Fetch API
 - **Build Tool:** Vite
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 - Python 3.8+
@@ -104,14 +104,14 @@ npm run dev
 
 Frontend will be available at http://localhost:5173
 
-## 📚 Documentation
+##  Documentation
 
 - **[Quick Start Guide](QUICK_START.md)** - Get started in 5 minutes
 - **[Backend API Documentation](BACKEND_README.md)** - Complete API reference
 - **[Deployment Guide](DEPLOYMENT_GUIDE.md)** - Production deployment instructions
 - **[Project Overview](PROJECT_COMPLETE.md)** - Detailed project documentation
 
-## 🔑 Default Credentials
+##  Default Credentials
 
 After running `create_sample_data.py`:
 
@@ -123,7 +123,7 @@ After running `create_sample_data.py`:
 - Email: `surveyor@lsrems.com`
 - Password: `surveyor123`
 
-## 📸 Screenshots
+##  Screenshots
 
 ### Dashboard
 ![Dashboard](docs/screenshots/dashboard.png)
@@ -134,7 +134,7 @@ After running `create_sample_data.py`:
 ### Property Listings
 ![Listings](docs/screenshots/listings.png)
 
-## 🏗️ Project Structure
+##  Project Structure
 
 ```
 lsrems/
@@ -157,7 +157,7 @@ lsrems/
 └── README.md
 ```
 
-## 🔌 API Endpoints
+##  API Endpoints
 
 ### Authentication
 ```
@@ -186,7 +186,7 @@ DELETE /api/projects/{id}/       # Delete project
 
 [See full API documentation](BACKEND_README.md)
 
-## 🧪 Testing
+##  Testing
 
 ### Backend Tests
 ```bash
@@ -199,7 +199,7 @@ cd frontend
 npm run test
 ```
 
-## 🚢 Deployment
+##  Deployment
 
 ### Using Docker
 ```bash
@@ -209,7 +209,7 @@ docker-compose up -d
 ### Manual Deployment
 See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for detailed instructions.
 
-## 🤝 Contributing
+##  Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
@@ -219,26 +219,26 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📝 License
+##  License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 👥 Authors
+##  Authors
 
 - Your Name - Initial work
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - Django REST Framework
 - React and the React community
 - shadcn/ui for beautiful components
 - All contributors and supporters
 
-## 📞 Support
+##  Support
 
 For support, email support@lsrems.com or open an issue in the repository.
 
-## 🗺️ Roadmap
+##  Roadmap
 
 - [ ] Mobile application (React Native)
 - [ ] GIS mapping integration
@@ -249,15 +249,15 @@ For support, email support@lsrems.com or open an issue in the repository.
 - [ ] Multi-language support
 - [ ] Dark mode
 
-## 📊 Project Status
+##  Project Status
 
-- ✅ Backend: Complete and operational
-- ✅ Frontend: Complete and ready
-- ✅ API Integration: Configured
-- ✅ Documentation: Comprehensive
-- ✅ Sample Data: Available
-- 🚀 Status: Production Ready
+-  Backend: Complete and operational
+-  Frontend: Complete and ready
+-  API Integration: Configured
+-  Documentation: Comprehensive
+-  Sample Data: Available
+-  Status: Production Ready
 
 ---
 
-**Built with ❤️ for the surveying and real estate industry**
+**Built with love for the surveying and real estate industry**
