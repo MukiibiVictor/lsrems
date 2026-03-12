@@ -55,10 +55,15 @@ class AuthViewSet(viewsets.GenericViewSet):
     @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
     def logout(self, request):
         """
-        Logout endpoint
+        Logout endpoint - deletes the user's auth token
         """
-        request.user.auth_token.delete()
-        return Response({'detail': 'Successfully logged out'})
+        try:
+            # Delete the user's token
+            request.user.auth_token.delete()
+        except Exception as e:
+            # Token might not exist, but that's okay
+            pass
+        return Response({'detail': 'Successfully logged out'}, status=status.HTTP_200_OK)
     
     @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def me(self, request):

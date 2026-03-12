@@ -3,10 +3,13 @@ export type UserRole = 'admin' | 'surveyor' | 'real_estate_manager' | 'customer'
 
 export interface User {
   id: number;
-  name: string;
+  username: string;
   email: string;
+  first_name: string;
+  last_name: string;
   role: UserRole;
-  created_at: string;
+  phone?: string;
+  date_joined: string;
 }
 
 // Customer Types

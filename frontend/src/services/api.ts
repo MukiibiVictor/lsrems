@@ -4,20 +4,20 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000
 // API Client with error handling
 class ApiClient {
   private baseURL: string;
-  private token: string | null = null;
 
   constructor(baseURL: string) {
     this.baseURL = baseURL;
-    this.token = localStorage.getItem('auth_token');
+  }
+
+  private getToken(): string | null {
+    return localStorage.getItem('auth_token');
   }
 
   setToken(token: string) {
-    this.token = token;
     localStorage.setItem('auth_token', token);
   }
 
   clearToken() {
-    this.token = null;
     localStorage.removeItem('auth_token');
   }
 
@@ -25,9 +25,10 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
+    const token = this.getToken();
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
-      ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      ...(token && { Authorization: `Token ${token}` }),
       ...options.headers,
     };
 
@@ -83,8 +84,9 @@ class ApiClient {
       });
     }
 
+    const token = this.getToken();
     const headers: HeadersInit = {
-      ...(this.token && { Authorization: `Bearer ${this.token}` }),
+      ...(token && { Authorization: `Token ${token}` }),
     };
 
     const response = await fetch(`${this.baseURL}${endpoint}`, {

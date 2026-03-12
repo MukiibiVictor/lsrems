@@ -19,9 +19,15 @@ export function Login() {
     setIsLoading(true);
     
     try {
-      await login(email, password);
+      const response = await login(email, password);
       toast.success("Login successful!");
-      navigate("/");
+      
+      // Redirect based on user role
+      if (response?.role === 'customer') {
+        navigate("/portal");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Login failed");
     } finally {
@@ -30,22 +36,22 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-teal-50 flex items-center justify-center px-4">
+    <div className="min-h-screen clean-bg flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="pricing-card hover-lift">
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 bg-emerald-600 rounded-2xl flex items-center justify-center mb-4">
+            <div className="w-16 h-16 gradient-emerald rounded-2xl flex items-center justify-center mb-4 shadow-lg hover:shadow-emerald-200 transition-all duration-300 hover:scale-105">
               <Building2 className="w-9 h-9 text-white" strokeWidth={2.5} />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">LSREMS</h1>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-emerald-700 bg-clip-text text-transparent mb-2">LSREMS</h1>
             <p className="text-gray-600 text-center">
               Land Surveying & Real Estate Management
             </p>
           </div>
 
           {/* Welcome Text */}
-          <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-6 text-center">
             Welcome Back
           </h2>
 
@@ -60,7 +66,7 @@ export function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-12"
+                className="h-12 glass-effect border-gray-200 focus:border-emerald-300 focus:ring-emerald-200"
               />
             </div>
 
@@ -73,13 +79,13 @@ export function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="h-12"
+                className="h-12 glass-effect border-gray-200 focus:border-emerald-300 focus:ring-emerald-200"
               />
             </div>
 
             <Button
               type="submit"
-              className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="w-full h-12 gradient-emerald text-white btn-glow hover:shadow-lg transition-all duration-300 hover:scale-[1.02]"
               disabled={isLoading}
             >
               {isLoading ? "Signing in..." : "Sign In"}
@@ -89,7 +95,7 @@ export function Login() {
           {/* Footer */}
           <p className="text-center text-sm text-gray-500 mt-6">
             Don't have an account?{" "}
-            <a href="#" className="text-emerald-600 hover:text-emerald-700 font-medium">
+            <a href="#" className="text-emerald-600 hover:text-emerald-700 font-medium transition-colors duration-200">
               Contact Administrator
             </a>
           </p>
