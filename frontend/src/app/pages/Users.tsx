@@ -195,16 +195,12 @@ export function Users() {
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case "admin":
-        return "bg-purple-100 text-purple-700";
-      case "surveyor":
-        return "bg-blue-100 text-blue-700";
-      case "real_estate_manager":
-        return "bg-emerald-100 text-emerald-700";
-      case "customer":
-        return "bg-gray-100 text-gray-700";
-      default:
-        return "bg-gray-100 text-gray-700";
+      case "admin": return "bg-purple-100 text-purple-700";
+      case "surveyor": return "bg-blue-100 text-blue-700";
+      case "real_estate_manager": return "bg-emerald-100 text-emerald-700";
+      case "worker": return "bg-orange-100 text-orange-700";
+      case "customer": return "bg-gray-100 text-gray-700";
+      default: return "bg-gray-100 text-gray-700";
     }
   };
 
@@ -307,6 +303,7 @@ export function Users() {
                       <SelectItem value="admin">Admin</SelectItem>
                       <SelectItem value="surveyor">Surveyor</SelectItem>
                       <SelectItem value="real_estate_manager">Real Estate Manager</SelectItem>
+                      <SelectItem value="worker">Worker / Secretary</SelectItem>
                       <SelectItem value="customer">Customer</SelectItem>
                     </SelectContent>
                   </Select>
@@ -578,6 +575,7 @@ export function Users() {
                     <SelectItem value="admin">Admin</SelectItem>
                     <SelectItem value="surveyor">Surveyor</SelectItem>
                     <SelectItem value="real_estate_manager">Real Estate Manager</SelectItem>
+                    <SelectItem value="worker">Worker / Secretary</SelectItem>
                     <SelectItem value="customer">Customer</SelectItem>
                   </SelectContent>
                 </Select>

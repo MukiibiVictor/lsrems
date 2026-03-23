@@ -30,7 +30,7 @@ import {
   AlertDialogTitle,
 } from "../components/ui/alert-dialog";
 import { TransactionForm, TransactionFormData } from "../components/forms/TransactionForm";
-import { transactionService } from "../../services";
+import { transactionService, propertyService, customerService } from "../../services";
 import { toast } from "sonner";
 
 export function Transactions() {
@@ -42,82 +42,48 @@ export function Transactions() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState("");
-
-  // Mock data for dropdowns - TODO: Fetch from API
-  const mockProperties = [
-    { id: 1, property_name: "Sunset Valley Estate" },
-    { id: 2, property_name: "Oceanview Heights" },
-    { id: 3, property_name: "Downtown Office Tower" },
-    { id: 4, property_name: "Riverside Apartments" },
-  ];
-
-  const mockCustomers = [
-    { id: 1, name: "John Anderson" },
-    { id: 2, name: "Emily Chen" },
-    { id: 3, name: "Robert Davis" },
-  ];
-
-  // Mock data
-  const mockTransactions = [
-    {
-      id: 1,
-      property: "Downtown Office Tower",
-      property_id: 3,
-      customer: "John Anderson",
-      customer_id: 1,
-      transaction_type: "sale",
-      price: 2500000,
-      transaction_date: "2026-02-28",
-      status: "completed",
-      statusColor: "bg-emerald-100 text-emerald-700",
-    },
-    {
-      id: 2,
-      property: "Riverside Apartments",
-      property_id: 4,
-      customer: "Emily Chen",
-      customer_id: 2,
-      transaction_type: "rental",
-      price: 3500,
-      transaction_date: "2026-03-01",
-      status: "active",
-      statusColor: "bg-blue-100 text-blue-700",
-    },
-    {
-      id: 3,
-      property: "Oceanview Heights",
-      property_id: 2,
-      customer: "Robert Davis",
-      customer_id: 3,
-      transaction_type: "sale",
-      price: 1850000,
-      transaction_date: "2026-03-05",
-      status: "pending",
-      statusColor: "bg-yellow-100 text-yellow-700",
-    },
-  ];
+  const [properties, setProperties] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<any[]>([]);
 
   useEffect(() => {
     loadTransactions();
+    loadDropdownData();
   }, []);
+
+  const loadDropdownData = async () => {
+    try {
+      const [propsRes, custsRes] = await Promise.all([
+        propertyService.getAll(),
+        customerService.getAll(),
+      ]);
+      setProperties(Array.isArray(propsRes.results || propsRes) ? (propsRes.results || propsRes) : []);
+      setCustomers(Array.isArray(custsRes.results || custsRes) ? (custsRes.results || custsRes) : []);
+    } catch (error) {
+      console.error("Failed to load dropdown data:", error);
+    }
+  };
 
   const loadTransactions = async () => {
     try {
       const response = await transactionService.getAll();
       const transactionsList = response.results || response;
-      setTransactions(Array.isArray(transactionsList) ? transactionsList : mockTransactions);
+      setTransactions(Array.isArray(transactionsList) ? transactionsList : []);
     } catch (error) {
       console.error("Failed to load transactions:", error);
-      setTransactions(mockTransactions);
+      toast.error("Failed to load transactions.");
+      setTransactions([]);
     }
   };
 
-  const displayTransactions = transactions.length > 0 ? transactions : mockTransactions;
-  const filteredTransactions = displayTransactions.filter((transaction: any) =>
-    transaction.property.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    transaction.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    `TXN-${String(transaction.id).padStart(3, '0')}`.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTransactions = transactions.filter((transaction: any) => {
+    const propertyName = transaction.property_name || transaction.property || "";
+    const customerName = transaction.customer_name || transaction.customer || "";
+    return (
+      propertyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      `TXN-${String(transaction.id).padStart(3, '0')}`.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
 
   const handleCreateTransaction = async (data: TransactionFormData) => {
     setIsLoading(true);
@@ -219,8 +185,8 @@ export function Transactions() {
               onSubmit={handleCreateTransaction}
               onCancel={() => setIsCreateOpen(false)}
               isLoading={isLoading}
-              properties={mockProperties}
-              customers={mockCustomers}
+              properties={properties}
+              customers={customers}
             />
           </DialogContent>
         </Dialog>
@@ -315,13 +281,19 @@ export function Transactions() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredTransactions.map((transaction: any) => (
+            {filteredTransactions.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-12 text-gray-500">
+                  {searchQuery ? "No transactions match your search." : "No transactions yet. Create your first one."}
+                </TableCell>
+              </TableRow>
+            ) : filteredTransactions.map((transaction: any) => (
               <TableRow key={transaction.id}>
                 <TableCell className="font-medium">TXN-{String(transaction.id).padStart(3, '0')}</TableCell>
                 <TableCell>
-                  <div className="font-medium text-gray-900">{transaction.property}</div>
+                  <div className="font-medium text-gray-900">{transaction.property_name || transaction.property}</div>
                 </TableCell>
-                <TableCell className="text-sm text-gray-600">{transaction.customer}</TableCell>
+                <TableCell className="text-sm text-gray-600">{transaction.customer_name || transaction.customer}</TableCell>
                 <TableCell>
                   <Badge
                     className={
@@ -338,7 +310,12 @@ export function Transactions() {
                 </TableCell>
                 <TableCell className="text-sm text-gray-600">{transaction.transaction_date}</TableCell>
                 <TableCell>
-                  <Badge className={transaction.statusColor}>{transaction.status}</Badge>
+                  <Badge className={
+                    transaction.status === 'completed' ? "bg-emerald-100 text-emerald-700" :
+                    transaction.status === 'active' ? "bg-blue-100 text-blue-700" :
+                    transaction.status === 'pending' ? "bg-yellow-100 text-yellow-700" :
+                    "bg-gray-100 text-gray-700"
+                  }>{transaction.status}</Badge>
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end gap-1">
@@ -393,16 +370,21 @@ export function Transactions() {
                 <div>
                   <label className="text-sm font-medium text-gray-700">Status</label>
                   <div className="mt-1">
-                    <Badge className={selectedTransaction.statusColor}>{selectedTransaction.status}</Badge>
+                    <Badge className={
+                      selectedTransaction.status === 'completed' ? "bg-emerald-100 text-emerald-700" :
+                      selectedTransaction.status === 'active' ? "bg-blue-100 text-blue-700" :
+                      selectedTransaction.status === 'pending' ? "bg-yellow-100 text-yellow-700" :
+                      "bg-gray-100 text-gray-700"
+                    }>{selectedTransaction.status}</Badge>
                   </div>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700">Property</label>
-                  <p className="text-gray-900 mt-1">{selectedTransaction.property}</p>
+                  <p className="text-gray-900 mt-1">{selectedTransaction.property_name || selectedTransaction.property}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700">Customer</label>
-                  <p className="text-gray-900 mt-1">{selectedTransaction.customer}</p>
+                  <p className="text-gray-900 mt-1">{selectedTransaction.customer_name || selectedTransaction.customer}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700">Type</label>
@@ -462,8 +444,8 @@ export function Transactions() {
                 setSelectedTransaction(null);
               }}
               isLoading={isLoading}
-              properties={mockProperties}
-              customers={mockCustomers}
+              properties={properties}
+              customers={customers}
             />
           )}
         </DialogContent>

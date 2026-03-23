@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { Textarea } from "../ui/textarea";
 import {
   Select,
   SelectContent,
@@ -15,6 +16,8 @@ export interface PropertyFormData {
   property_name: string;
   location: string;
   size: string;
+  description?: string;
+  price?: number | null;
   land_title_id?: number;
   property_type: 'land' | 'house' | 'commercial' | 'apartment';
   status?: PropertyStatus;
@@ -40,6 +43,8 @@ export function PropertyForm({
       property_name: "",
       location: "",
       size: "",
+      description: "",
+      price: null,
       property_type: "land",
       status: "available",
     }
@@ -73,7 +78,7 @@ export function PropertyForm({
     }
   };
 
-  const handleChange = (field: keyof PropertyFormData, value: string | number) => {
+  const handleChange = (field: keyof PropertyFormData, value: string | number | null | undefined) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
@@ -139,11 +144,32 @@ export function PropertyForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="land_title_id">Land Title (Optional)</Label>
-        <Select
+        <Label htmlFor="price">Price (UGX, Optional)</Label>
+        <Input
+          id="price"
+          type="number"
+          min="0"
+          value={formData.price ?? ""}
+          onChange={(e) => handleChange("price", e.target.value === "" ? null : parseFloat(e.target.value))}
+          placeholder="e.g., 50000000"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description">Description (Optional)</Label>
+        <Textarea
+          id="description"
+          value={formData.description || ""}
+          onChange={(e) => handleChange("description", e.target.value)}
+          placeholder="Describe the property..."
+          rows={3}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="land_title_id">Land Title (Optional)</Label>        <Select
           value={formData.land_title_id?.toString() || "none"}
-          onValueChange={(value) => handleChange("land_title_id", value === "none" ? undefined : parseInt(value))}
-        >
+          onValueChange={(value) => handleChange("land_title_id", value === "none" ? undefined : parseInt(value))}        >
           <SelectTrigger>
             <SelectValue placeholder="Select land title" />
           </SelectTrigger>

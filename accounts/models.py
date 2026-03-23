@@ -43,6 +43,7 @@ class User(AbstractUser):
         ('admin', 'Admin'),
         ('surveyor', 'Surveyor'),
         ('real_estate_manager', 'Real Estate Manager'),
+        ('worker', 'Worker / Secretary'),
         ('customer', 'Customer'),
     ]
     

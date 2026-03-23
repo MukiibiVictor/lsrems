@@ -27,7 +27,7 @@ export const landTitleService = {
     return apiClient.uploadFile<LandTitle>('/land-titles/', file, {
       project_id: data.project_id.toString(),
       document_type: data.document_type,
-    });
+    }, 'document_file');
   },
 
   async delete(id: number): Promise<void> {
@@ -35,9 +35,10 @@ export const landTitleService = {
   },
 
   async download(id: number): Promise<Blob> {
-    const response = await fetch(`${apiClient['baseURL']}/land-titles/${id}/download/`, {
+    const token = localStorage.getItem('auth_token');
+    const response = await fetch(`${apiClient.getBaseURL()}/land-titles/${id}/download/`, {
       headers: {
-        Authorization: `Bearer ${localStorage.getItem('auth_token')}`,
+        Authorization: `Token ${token}`,
       },
     });
     

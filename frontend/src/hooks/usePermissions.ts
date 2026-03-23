@@ -1,33 +1,33 @@
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../types';
 
+/**
+ * Role hierarchy:
+ *  admin              — full access
+ *  real_estate_manager — most features, no user management
+ *  surveyor           — projects, documents, dashboard; no reports/transactions
+ *  worker             — data entry: customers, projects, expenses; no reports/users
+ *  customer           — portal only
+ */
 export function usePermissions() {
-  const { user, hasRole } = useAuth();
+  const { user } = useAuth();
+  const role = user?.role as UserRole | undefined;
+
+  const is = (roles: UserRole[]) => !!role && roles.includes(role);
 
   return {
-    // Admin permissions
-    canManageUsers: hasRole('admin'),
-    canManageAllProjects: hasRole('admin'),
-    canManageAllProperties: hasRole('admin'),
-    canViewReports: hasRole(['admin', 'real_estate_manager']),
-    canManageCustomers: hasRole(['admin', 'real_estate_manager']),
-    
-    // Surveyor permissions
-    canViewAssignedProjects: hasRole(['admin', 'surveyor']),
-    canUpdateProjectProgress: hasRole(['admin', 'surveyor']),
-    canUploadDocuments: hasRole(['admin', 'surveyor']),
-    
-    // Real Estate Manager permissions
-    canManageListings: hasRole(['admin', 'real_estate_manager']),
-    canManageTransactions: hasRole(['admin', 'real_estate_manager']),
-    canManageProperties: hasRole(['admin', 'real_estate_manager']),
-    
-    // Customer permissions
-    canViewOwnProjects: hasRole(['admin', 'customer']),
-    canViewOwnProperties: hasRole(['admin', 'customer']),
-    
-    // Current user info
-    currentUser: user,
-    userRole: user?.role,
+    canViewReports:       is(['admin', 'real_estate_manager']),
+    canManageUsers:       is(['admin']),
+    canManageExpenses:    is(['admin', 'worker', 'real_estate_manager', 'surveyor']),
+    canViewExpenses:      is(['admin', 'worker', 'real_estate_manager', 'surveyor']),
+    canManageTransactions:is(['admin', 'real_estate_manager']),
+    canViewTransactions:  is(['admin', 'real_estate_manager', 'worker']),
+    canManageProperties:  is(['admin', 'real_estate_manager']),
+    canManageProjects:    is(['admin', 'surveyor', 'worker']),
+    canManageCustomers:   is(['admin', 'real_estate_manager', 'worker']),
+    isAdmin:              is(['admin']),
+    isWorker:             is(['worker']),
+    isSurveyor:           is(['surveyor']),
+    role,
   };
 }

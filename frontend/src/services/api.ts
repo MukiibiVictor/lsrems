@@ -71,12 +71,24 @@ class ApiClient {
   }
 
   async delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'DELETE' });
+    const token = this.getToken();
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+      ...(token && { Authorization: `Token ${token}` }),
+    };
+    const response = await fetch(`${this.baseURL}${endpoint}`, { method: 'DELETE', headers });
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'An error occurred' }));
+      throw new Error(error.detail || `HTTP ${response.status}`);
+    }
+    // 204 No Content has no body
+    if (response.status === 204) return undefined as T;
+    return response.json();
   }
 
-  async uploadFile<T>(endpoint: string, file: File, additionalData?: Record<string, string>): Promise<T> {
+  async uploadFile<T>(endpoint: string, file: File, additionalData?: Record<string, string>, fileFieldName = 'file'): Promise<T> {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append(fileFieldName, file);
     
     if (additionalData) {
       Object.entries(additionalData).forEach(([key, value]) => {
@@ -101,6 +113,10 @@ class ApiClient {
     }
 
     return response.json();
+  }
+
+  getBaseURL(): string {
+    return this.baseURL;
   }
 }
 

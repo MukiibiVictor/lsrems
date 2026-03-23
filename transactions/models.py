@@ -11,10 +11,18 @@ class PropertyTransaction(models.Model):
         ('sale', 'Sale'),
         ('rental', 'Rental'),
     ]
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('active', 'Active'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
     
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name='transactions')
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='transactions')
     transaction_type = models.CharField(max_length=50, choices=TRANSACTION_TYPE_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     price = models.DecimalField(max_digits=12, decimal_places=2)
     transaction_date = models.DateField()
     created_at = models.DateTimeField(auto_now_add=True)

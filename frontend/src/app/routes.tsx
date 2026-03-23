@@ -1,5 +1,6 @@
-import { createBrowserRouter, Navigate } from "react-router";
+import { createBrowserRouter } from "react-router";
 import { MainLayout } from "./components/MainLayout";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
 import { SurveyProjects } from "./pages/SurveyProjects";
@@ -12,23 +13,26 @@ import { LandTitles } from "./pages/LandTitles";
 import { LandingPage } from "./pages/LandingPage";
 import { CustomerPortal } from "./pages/CustomerPortal";
 import { Users } from "./pages/Users";
+import { Expenses } from "./pages/Expenses";
 
 export const router = createBrowserRouter([
-  {
-    path: "/",
-    Component: LandingPage,
-  },
-  {
-    path: "/login",
-    Component: Login,
-  },
+  { path: "/", Component: LandingPage },
+  { path: "/login", Component: Login },
   {
     path: "/portal",
-    Component: CustomerPortal,
+    element: (
+      <ProtectedRoute allowedRoles={['customer']}>
+        <CustomerPortal />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/dashboard",
-    Component: MainLayout,
+    element: (
+      <ProtectedRoute allowedRoles={['admin', 'surveyor', 'real_estate_manager', 'worker']}>
+        <MainLayout />
+      </ProtectedRoute>
+    ),
     children: [
       { index: true, Component: Dashboard },
       { path: "survey-projects", Component: SurveyProjects },
@@ -37,6 +41,7 @@ export const router = createBrowserRouter([
       { path: "property-listings", Component: PropertyListings },
       { path: "customers", Component: Customers },
       { path: "transactions", Component: Transactions },
+      { path: "expenses", Component: Expenses },
       { path: "reports", Component: Reports },
       { path: "users", Component: Users },
     ],

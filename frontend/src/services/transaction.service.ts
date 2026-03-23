@@ -32,6 +32,10 @@ export const transactionService = {
     return apiClient.post<PropertyTransaction>('/transactions/', data);
   },
 
+  async update(id: number, data: Partial<CreateTransactionData>): Promise<PropertyTransaction> {
+    return apiClient.patch<PropertyTransaction>(`/transactions/${id}/`, data);
+  },
+
   async delete(id: number): Promise<void> {
     return apiClient.delete<void>(`/transactions/${id}/`);
   },

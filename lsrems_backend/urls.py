@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from .views import dashboard_stats
+from .views import dashboard_stats, reports_stats
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,7 +27,9 @@ urlpatterns = [
     path('api/', include('projects.urls')),
     path('api/', include('properties.urls')),
     path('api/transactions/', include('transactions.urls')),
+    path('api/', include('expenses.urls')),
     path('api/dashboard/stats/', dashboard_stats, name='dashboard-stats'),
+    path('api/reports/stats/', reports_stats, name='reports-stats'),
 ]
 
 # Serve media files in development

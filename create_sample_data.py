@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 """
-Script to create sample data for testing
+Script to create sample data for testing - DISABLED BY DEFAULT
+Run with --create-sample flag to actually create sample data
 """
 import os
+import sys
 import django
 from datetime import date, timedelta
 
@@ -22,7 +24,11 @@ def create_sample_data():
     print("🚀 Creating sample data...")
     
     # Get admin user
-    admin = User.objects.get(username='admin')
+    try:
+        admin = User.objects.get(username='admin')
+    except User.DoesNotExist:
+        print("❌ Admin user not found. Please create admin user first.")
+        return
     
     # Create surveyor user
     surveyor, created = User.objects.get_or_create(
@@ -217,5 +223,41 @@ def create_sample_data():
     print(f"   - Transactions: {PropertyTransaction.objects.count()}")
     print("\n✅ You can now test the system with real data!")
 
+def clear_sample_data():
+    print("🧹 Clearing all sample data...")
+    
+    # Delete in reverse order to avoid foreign key constraints
+    PropertyTransaction.objects.all().delete()
+    PropertyListing.objects.all().delete()
+    Property.objects.all().delete()
+    ProjectUpdate.objects.all().delete()
+    SurveyProject.objects.all().delete()
+    Customer.objects.all().delete()
+    
+    # Delete sample users (keep admin)
+    User.objects.exclude(username='admin').delete()
+    
+    print("✅ All sample data cleared!")
+    print("📊 Current counts:")
+    print(f"   - Users: {User.objects.count()}")
+    print(f"   - Customers: {Customer.objects.count()}")
+    print(f"   - Projects: {SurveyProject.objects.count()}")
+    print(f"   - Properties: {Property.objects.count()}")
+    print(f"   - Listings: {PropertyListing.objects.count()}")
+    print(f"   - Transactions: {PropertyTransaction.objects.count()}")
+
 if __name__ == '__main__':
-    create_sample_data()
+    if '--create-sample' in sys.argv:
+        create_sample_data()
+    elif '--clear-data' in sys.argv:
+        clear_sample_data()
+    else:
+        print("📋 Sample Data Management Script")
+        print("\nOptions:")
+        print("  --create-sample  Create sample data for testing")
+        print("  --clear-data     Remove all sample data")
+        print("\nExample:")
+        print("  python create_sample_data.py --create-sample")
+        print("  python create_sample_data.py --clear-data")
+        print("\n⚠️  By default, no sample data is created.")
+        print("    This allows you to start with a clean system.")

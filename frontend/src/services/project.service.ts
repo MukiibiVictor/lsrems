@@ -3,7 +3,7 @@ import { SurveyProject, ProjectUpdate, PaginatedResponse, ProjectStatus } from '
 
 export interface CreateProjectData {
   customer_id: number;
-  surveyor_id: number;
+  surveyor_id?: number;
   project_name: string;
   location: string;
   status?: ProjectStatus;
@@ -54,5 +54,25 @@ export const projectService = {
 
   async addUpdate(data: CreateProjectUpdateData): Promise<ProjectUpdate> {
     return apiClient.post<ProjectUpdate>('/project-updates/', data);
+  },
+
+  async getUnassigned(): Promise<SurveyProject[]> {
+    return apiClient.get<SurveyProject[]>('/projects/unassigned/');
+  },
+
+  async getMyJobs(): Promise<SurveyProject[]> {
+    return apiClient.get<SurveyProject[]>('/projects/my-jobs/');
+  },
+
+  async assignSelf(projectId: number): Promise<SurveyProject> {
+    return apiClient.post<SurveyProject>(`/projects/${projectId}/assign-self/`, {});
+  },
+
+  async assignTo(projectId: number, userId: number): Promise<SurveyProject> {
+    return apiClient.post<SurveyProject>(`/projects/${projectId}/assign/`, { user_id: userId });
+  },
+
+  async complete(projectId: number, notes: string): Promise<SurveyProject> {
+    return apiClient.post<SurveyProject>(`/projects/${projectId}/complete/`, { notes });
   },
 };

@@ -23,6 +23,7 @@ interface TransactionFormProps {
   onSubmit: (data: TransactionFormData) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  initialData?: Partial<TransactionFormData>;
   properties?: Array<{ id: number; property_name: string }>;
   customers?: Array<{ id: number; name: string }>;
 }
@@ -31,15 +32,16 @@ export function TransactionForm({
   onSubmit, 
   onCancel, 
   isLoading,
+  initialData,
   properties = [],
   customers = []
 }: TransactionFormProps) {
   const [formData, setFormData] = useState<TransactionFormData>({
-    property_id: 0,
-    customer_id: 0,
-    transaction_type: "sale",
-    price: 0,
-    transaction_date: new Date().toISOString().split('T')[0],
+    property_id: initialData?.property_id || 0,
+    customer_id: initialData?.customer_id || 0,
+    transaction_type: initialData?.transaction_type || "sale",
+    price: initialData?.price || 0,
+    transaction_date: initialData?.transaction_date || new Date().toISOString().split('T')[0],
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof TransactionFormData, string>>>({});
@@ -165,7 +167,7 @@ export function TransactionForm({
           Cancel
         </Button>
         <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700" disabled={isLoading}>
-          {isLoading ? "Creating..." : "Create Transaction"}
+          {isLoading ? "Saving..." : initialData ? "Update Transaction" : "Create Transaction"}
         </Button>
       </div>
     </form>

@@ -6,6 +6,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { useAuth } from "../../contexts/AuthContext";
 import { toast } from "sonner";
+import { WhatsAppContact } from "../components/WhatsAppContact";
 
 export function Login() {
   const navigate = useNavigate();
@@ -99,6 +100,14 @@ export function Login() {
               Contact Administrator
             </a>
           </p>
+          
+          {/* WhatsApp Contact */}
+          <div className="flex justify-center mt-4">
+            <WhatsAppContact 
+              message="Hello! I need help accessing the LSREMS system. Can you help me create an account?"
+              className="text-sm"
+            />
+          </div>
         </div>
       </div>
     </div>
