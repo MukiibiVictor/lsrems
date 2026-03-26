@@ -7,39 +7,51 @@ import { Ionicons } from "@expo/vector-icons";
 import { AuthProvider, useAuth } from "./src/context/AuthContext";
 import { LoginScreen } from "./src/screens/LoginScreen";
 import { DashboardScreen } from "./src/screens/DashboardScreen";
-import { PropertiesScreen } from "./src/screens/PropertiesScreen";
 import { ProjectsScreen } from "./src/screens/ProjectsScreen";
+import { NotificationsScreen } from "./src/screens/NotificationsScreen";
+import { ProfileScreen } from "./src/screens/ProfileScreen";
+import { MoreScreen } from "./src/screens/MoreScreen";
+// Stack screens (accessed from More)
+import { PropertiesScreen } from "./src/screens/PropertiesScreen";
 import { CustomersScreen } from "./src/screens/CustomersScreen";
 import { TransactionsScreen } from "./src/screens/TransactionsScreen";
 import { ExpensesScreen } from "./src/screens/ExpensesScreen";
-import { ProfileScreen } from "./src/screens/ProfileScreen";
-import { NotificationsScreen } from "./src/screens/NotificationsScreen";
 import { LandTitlesScreen } from "./src/screens/LandTitlesScreen";
+import { ReportsScreen } from "./src/screens/ReportsScreen";
 import { colors } from "./src/constants/theme";
 import { ActivityIndicator, View } from "react-native";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+const MoreStack = createNativeStackNavigator();
 
-const TAB_ICONS: Record<string, [string, string]> = {
-  Dashboard:    ["grid",              "grid-outline"],
-  Properties:   ["business",          "business-outline"],
-  Projects:     ["map",               "map-outline"],
-  Customers:    ["people",            "people-outline"],
-  Transactions: ["swap-horizontal",   "swap-horizontal-outline"],
-  Expenses:     ["receipt",           "receipt-outline"],
-  Documents:    ["folder",            "folder-outline"],
-  Profile:      ["person-circle",     "person-circle-outline"],
+const HEADER_OPTS = {
+  headerStyle: { backgroundColor: colors.surface },
+  headerTintColor: colors.text,
+  headerTitleStyle: { fontWeight: "800" as const, fontSize: 17 },
+  headerShadowVisible: false,
 };
+
+// Stack navigator for "More" section
+function MoreNavigator() {
+  return (
+    <MoreStack.Navigator screenOptions={HEADER_OPTS}>
+      <MoreStack.Screen name="MoreHome" component={MoreScreen} options={{ title: "More" }} />
+      <MoreStack.Screen name="Properties" component={PropertiesScreen} options={{ title: "Properties" }} />
+      <MoreStack.Screen name="Customers" component={CustomersScreen} options={{ title: "Customers" }} />
+      <MoreStack.Screen name="Transactions" component={TransactionsScreen} options={{ title: "Transactions" }} />
+      <MoreStack.Screen name="Expenses" component={ExpensesScreen} options={{ title: "Expenses" }} />
+      <MoreStack.Screen name="Documents" component={LandTitlesScreen} options={{ title: "Land Title Documents" }} />
+      <MoreStack.Screen name="Reports" component={ReportsScreen} options={{ title: "Reports & Analytics" }} />
+    </MoreStack.Navigator>
+  );
+}
 
 function MainTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        headerStyle: { backgroundColor: colors.surface },
-        headerTintColor: colors.text,
-        headerTitleStyle: { fontWeight: "800", fontSize: 17 },
-        headerShadowVisible: false,
+        ...HEADER_OPTS,
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
@@ -49,20 +61,29 @@ function MainTabs() {
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textDim,
-        tabBarLabelStyle: { fontSize: 10, fontWeight: "600" },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
         tabBarIcon: ({ focused, color, size }) => {
-          const [active, inactive] = TAB_ICONS[route.name] || ["ellipse", "ellipse-outline"];
+          const icons: Record<string, [string, string]> = {
+            Dashboard:     ["grid",                "grid-outline"],
+            Projects:      ["map",                 "map-outline"],
+            Notifications: ["notifications",       "notifications-outline"],
+            More:          ["apps",                "apps-outline"],
+            Profile:       ["person-circle",       "person-circle-outline"],
+          };
+          const [active, inactive] = icons[route.name] || ["ellipse", "ellipse-outline"];
           return <Ionicons name={(focused ? active : inactive) as any} size={size} color={color} />;
         },
       })}
     >
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Projects" component={ProjectsScreen} />
-      <Tab.Screen name="Properties" component={PropertiesScreen} />
-      <Tab.Screen name="Customers" component={CustomersScreen} />
-      <Tab.Screen name="Transactions" component={TransactionsScreen} />
-      <Tab.Screen name="Expenses" component={ExpensesScreen} />
-      <Tab.Screen name="Documents" component={LandTitlesScreen} options={{ tabBarLabel: "Documents" }} />
+      <Tab.Screen name="Notifications" component={NotificationsScreen}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: "Notifications",
+          tabBarBadge: undefined, // will be set dynamically via context if needed
+        })} />
+      <Tab.Screen name="More" component={MoreNavigator} options={{ headerShown: false }} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -79,15 +100,9 @@ function RootNavigator() {
   }
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {user ? (
-        <>
-          <Stack.Screen name="Main" component={MainTabs} />
-          <Stack.Screen name="Notifications" component={NotificationsScreen}
-            options={{ headerShown: true, title: "Notifications", headerStyle: { backgroundColor: colors.surface }, headerTintColor: colors.text, headerTitleStyle: { fontWeight: "800" }, headerShadowVisible: false }} />
-        </>
-      ) : (
-        <Stack.Screen name="Login" component={LoginScreen} />
-      )}
+      {user
+        ? <Stack.Screen name="Main" component={MainTabs} />
+        : <Stack.Screen name="Login" component={LoginScreen} />}
     </Stack.Navigator>
   );
 }
