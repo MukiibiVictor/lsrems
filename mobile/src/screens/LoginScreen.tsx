@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  KeyboardAvoidingView, Platform, ActivityIndicator, Alert,
+  KeyboardAvoidingView, Platform, ActivityIndicator, Alert, Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, radius } from "../constants/theme";
@@ -82,10 +82,12 @@ export function LoginScreen() {
             : <Text style={styles.btnText}>Sign In</Text>}
         </TouchableOpacity>
 
-        <Text style={styles.footer}>
-          Need access?{" "}
-          <Text style={styles.link}>Contact Administrator</Text>
-        </Text>
+        <TouchableOpacity onPress={() => Linking.openURL(`https://wa.me/256751768901?text=${encodeURIComponent("Hello! I need help accessing the LSREMS system. Can you create an account for me?")}`)}>
+          <Text style={styles.footer}>
+            Need access?{" "}
+            <Text style={styles.link}>Contact Administrator via WhatsApp</Text>
+          </Text>
+        </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
   );

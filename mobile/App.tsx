@@ -9,12 +9,28 @@ import { LoginScreen } from "./src/screens/LoginScreen";
 import { DashboardScreen } from "./src/screens/DashboardScreen";
 import { PropertiesScreen } from "./src/screens/PropertiesScreen";
 import { ProjectsScreen } from "./src/screens/ProjectsScreen";
+import { CustomersScreen } from "./src/screens/CustomersScreen";
+import { TransactionsScreen } from "./src/screens/TransactionsScreen";
+import { ExpensesScreen } from "./src/screens/ExpensesScreen";
 import { ProfileScreen } from "./src/screens/ProfileScreen";
+import { NotificationsScreen } from "./src/screens/NotificationsScreen";
+import { LandTitlesScreen } from "./src/screens/LandTitlesScreen";
 import { colors } from "./src/constants/theme";
 import { ActivityIndicator, View } from "react-native";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+
+const TAB_ICONS: Record<string, [string, string]> = {
+  Dashboard:    ["grid",              "grid-outline"],
+  Properties:   ["business",          "business-outline"],
+  Projects:     ["map",               "map-outline"],
+  Customers:    ["people",            "people-outline"],
+  Transactions: ["swap-horizontal",   "swap-horizontal-outline"],
+  Expenses:     ["receipt",           "receipt-outline"],
+  Documents:    ["folder",            "folder-outline"],
+  Profile:      ["person-circle",     "person-circle-outline"],
+};
 
 function MainTabs() {
   return (
@@ -22,7 +38,7 @@ function MainTabs() {
       screenOptions={({ route }) => ({
         headerStyle: { backgroundColor: colors.surface },
         headerTintColor: colors.text,
-        headerTitleStyle: { fontWeight: "800" },
+        headerTitleStyle: { fontWeight: "800", fontSize: 17 },
         headerShadowVisible: false,
         tabBarStyle: {
           backgroundColor: colors.surface,
@@ -33,22 +49,20 @@ function MainTabs() {
         },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textDim,
-        tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
+        tabBarLabelStyle: { fontSize: 10, fontWeight: "600" },
         tabBarIcon: ({ focused, color, size }) => {
-          const icons: Record<string, [string, string]> = {
-            Dashboard: ["grid", "grid-outline"],
-            Properties: ["business", "business-outline"],
-            Projects: ["map", "map-outline"],
-            Profile: ["person-circle", "person-circle-outline"],
-          };
-          const [active, inactive] = icons[route.name] || ["ellipse", "ellipse-outline"];
+          const [active, inactive] = TAB_ICONS[route.name] || ["ellipse", "ellipse-outline"];
           return <Ionicons name={(focused ? active : inactive) as any} size={size} color={color} />;
         },
       })}
     >
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
-      <Tab.Screen name="Properties" component={PropertiesScreen} />
       <Tab.Screen name="Projects" component={ProjectsScreen} />
+      <Tab.Screen name="Properties" component={PropertiesScreen} />
+      <Tab.Screen name="Customers" component={CustomersScreen} />
+      <Tab.Screen name="Transactions" component={TransactionsScreen} />
+      <Tab.Screen name="Expenses" component={ExpensesScreen} />
+      <Tab.Screen name="Documents" component={LandTitlesScreen} options={{ tabBarLabel: "Documents" }} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -56,7 +70,6 @@ function MainTabs() {
 
 function RootNavigator() {
   const { user, isLoading } = useAuth();
-
   if (isLoading) {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background, alignItems: "center", justifyContent: "center" }}>
@@ -64,11 +77,14 @@ function RootNavigator() {
       </View>
     );
   }
-
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       {user ? (
-        <Stack.Screen name="Main" component={MainTabs} />
+        <>
+          <Stack.Screen name="Main" component={MainTabs} />
+          <Stack.Screen name="Notifications" component={NotificationsScreen}
+            options={{ headerShown: true, title: "Notifications", headerStyle: { backgroundColor: colors.surface }, headerTintColor: colors.text, headerTitleStyle: { fontWeight: "800" }, headerShadowVisible: false }} />
+        </>
       ) : (
         <Stack.Screen name="Login" component={LoginScreen} />
       )}

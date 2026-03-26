@@ -1,164 +1,87 @@
 import { useState, useEffect, useCallback } from "react";
-import { Bell, X, CheckCircle, AlertCircle, Info, Calendar, DollarSign, FileText, Users } from "lucide-react";
+import { Bell, X, CheckCircle, AlertCircle, Info, MapPin, Home, DollarSign, Users, RefreshCw } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "./ui/sheet";
 import { ScrollArea } from "./ui/scroll-area";
-import { Separator } from "./ui/separator";
-import { transactionService, projectService, customerService } from "../../services";
+import { apiClient } from "../../services/api";
 
-export interface Notification {
-  id: string;
-  type: "info" | "success" | "warning" | "error";
+interface BackendNotif {
+  id: number;
+  notif_type: string;
   title: string;
   message: string;
-  timestamp: string;
-  read: boolean;
-  category: "report" | "booking" | "transaction" | "system" | "project";
+  is_read: boolean;
+  project_id: number | null;
+  property_id: number | null;
+  sender_name: string;
+  created_at: string;
 }
 
-interface NotificationCenterProps {
-  className?: string;
+const TYPE_ICON: Record<string, { icon: any; color: string }> = {
+  project_assigned:   { icon: MapPin,      color: "text-blue-500" },
+  project_claimed:    { icon: CheckCircle, color: "text-purple-500" },
+  project_status:     { icon: RefreshCw,   color: "text-yellow-500" },
+  project_completed:  { icon: CheckCircle, color: "text-emerald-500" },
+  project_overdue:    { icon: AlertCircle, color: "text-red-500" },
+  new_project:        { icon: MapPin,      color: "text-blue-500" },
+  new_property:       { icon: Home,        color: "text-emerald-500" },
+  new_customer:       { icon: Users,       color: "text-purple-500" },
+  new_expense:        { icon: DollarSign,  color: "text-yellow-500" },
+  new_transaction:    { icon: DollarSign,  color: "text-pink-500" },
+  general:            { icon: Info,        color: "text-gray-400" },
+};
+
+function timeAgo(ts: string) {
+  const diff = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+  if (diff < 60) return "Just now";
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
 }
 
-export function NotificationCenter({ className = "" }: NotificationCenterProps) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+export function NotificationCenter({ className = "" }: { className?: string }) {
+  const [notifications, setNotifications] = useState<BackendNotif[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const buildNotifications = useCallback(async () => {
+  const load = useCallback(async () => {
     setLoading(true);
-    const built: Notification[] = [];
-
     try {
-      const txnRes = await transactionService.getAll();
-      const txns: any[] = (txnRes as any).results ?? (txnRes as any) ?? [];
-      (Array.isArray(txns) ? txns : []).slice(0, 5).forEach((t: any) => {
-        const propName = t.property?.property_name || t.property_name || "a property";
-        built.push({
-          id: `txn-${t.id}`,
-          type: "success",
-          title: `${t.transaction_type === "sale" ? "Sale" : "Rental"} Recorded`,
-          message: `${propName} — ${Number(t.price || 0).toLocaleString()}`,
-          timestamp: t.transaction_date ? new Date(t.transaction_date).toISOString() : new Date().toISOString(),
-          read: false,
-          category: "transaction",
-        });
-      });
-    } catch { /* skip */ }
-
-    try {
-      const projRes = await projectService.getAll();
-      const projects: any[] = (projRes as any).results ?? (projRes as any) ?? [];
-      (Array.isArray(projects) ? projects : []).forEach((p: any) => {
-        if (p.status === "pending") {
-          built.push({
-            id: `proj-pending-${p.id}`,
-            type: "warning",
-            title: "Project Awaiting Action",
-            message: `"${p.project_name}" is pending — assign a surveyor or start work.`,
-            timestamp: p.created_at || new Date().toISOString(),
-            read: false,
-            category: "project",
-          });
-        }
-        if (p.is_overdue) {
-          built.push({
-            id: `proj-overdue-${p.id}`,
-            type: "error",
-            title: "Project Overdue",
-            message: `"${p.project_name}" has passed its deadline.`,
-            timestamp: p.updated_at || new Date().toISOString(),
-            read: false,
-            category: "project",
-          });
-        }
-        if (p.needs_reminder && p.days_until_deadline != null) {
-          built.push({
-            id: `proj-reminder-${p.id}`,
-            type: "info",
-            title: "Deadline Approaching",
-            message: `"${p.project_name}" deadline in ${p.days_until_deadline} day(s).`,
-            timestamp: new Date().toISOString(),
-            read: false,
-            category: "project",
-          });
-        }
-      });
-    } catch { /* skip */ }
-
-    try {
-      const custRes = await customerService.getAll();
-      const customers: any[] = (custRes as any).results ?? (custRes as any) ?? [];
-      (Array.isArray(customers) ? customers : []).slice(0, 3).forEach((c: any) => {
-        built.push({
-          id: `cust-${c.id}`,
-          type: "info",
-          title: "Customer Registered",
-          message: `${c.name} has been added to the system.`,
-          timestamp: c.created_at || new Date().toISOString(),
-          read: true,
-          category: "booking",
-        });
-      });
-    } catch { /* skip */ }
-
-    built.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-    setNotifications((prev) => {
-      const readIds = new Set(prev.filter((n) => n.read).map((n) => n.id));
-      return built.map((n) => ({ ...n, read: readIds.has(n.id) }));
-    });
-    setLoading(false);
+      const data = await apiClient.get<any>("/notifications/?page_size=50");
+      setNotifications(data.results || data || []);
+    } catch { /* silent */ }
+    finally { setLoading(false); }
   }, []);
 
   useEffect(() => {
-    buildNotifications();
-    const interval = setInterval(buildNotifications, 2 * 60 * 1000);
+    load();
+    const interval = setInterval(load, 60_000); // refresh every minute
     return () => clearInterval(interval);
-  }, [buildNotifications]);
+  }, [load]);
 
-  const handleOpen = () => {
-    setIsOpen(true);
-    buildNotifications();
+  const markRead = async (id: number) => {
+    try {
+      await apiClient.post(`/notifications/${id}/mark-read/`, {});
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+    } catch { /* silent */ }
   };
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
-  const markAsRead = (id: string) => setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
-  const markAllAsRead = () => setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  const remove = (id: string) => setNotifications((prev) => prev.filter((n) => n.id !== id));
-
-  const typeIcon = (type: Notification["type"]) => {
-    if (type === "success") return <CheckCircle className="w-4 h-4 text-emerald-600 flex-shrink-0" />;
-    if (type === "warning") return <AlertCircle className="w-4 h-4 text-yellow-500 flex-shrink-0" />;
-    if (type === "error") return <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />;
-    return <Info className="w-4 h-4 text-blue-500 flex-shrink-0" />;
+  const markAllRead = async () => {
+    try {
+      await apiClient.post("/notifications/mark-all-read/", {});
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    } catch { /* silent */ }
   };
 
-  const catIcon = (cat: Notification["category"]) => {
-    if (cat === "transaction") return <DollarSign className="w-3.5 h-3.5 text-gray-400" />;
-    if (cat === "project") return <Calendar className="w-3.5 h-3.5 text-gray-400" />;
-    if (cat === "booking") return <Users className="w-3.5 h-3.5 text-gray-400" />;
-    if (cat === "report") return <FileText className="w-3.5 h-3.5 text-gray-400" />;
-    return <Bell className="w-3.5 h-3.5 text-gray-400" />;
-  };
-
-  const timeAgo = (ts: string) => {
-    const diff = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
-    if (diff < 60) return "Just now";
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-    return `${Math.floor(diff / 86400)}d ago`;
-  };
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
     <>
-      {/* Bell trigger button */}
       <Button
-        variant="ghost"
-        size="sm"
-        onClick={handleOpen}
-        className={`relative hover:bg-gray-100 transition-colors duration-200 ${className}`}
+        variant="ghost" size="sm"
+        onClick={() => { setIsOpen(true); load(); }}
+        className={`relative hover:bg-gray-100 transition-colors ${className}`}
       >
         <Bell className="w-5 h-5 text-gray-600" />
         {unreadCount > 0 && (
@@ -168,19 +91,15 @@ export function NotificationCenter({ className = "" }: NotificationCenterProps) 
         )}
       </Button>
 
-      {/* Slide-in panel */}
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetContent side="right" className="w-[380px] sm:w-[420px] p-0 flex flex-col">
           <SheetHeader className="px-4 py-4 border-b flex-row items-center justify-between space-y-0">
             <SheetTitle className="text-base font-semibold">
               Notifications
-              {unreadCount > 0 && (
-                <Badge className="ml-2 bg-red-500 text-white text-xs">{unreadCount}</Badge>
-              )}
+              {unreadCount > 0 && <Badge className="ml-2 bg-red-500 text-white text-xs">{unreadCount}</Badge>}
             </SheetTitle>
             {unreadCount > 0 && (
-              <Button variant="ghost" size="sm" onClick={markAllAsRead}
-                className="text-xs text-emerald-600 hover:text-emerald-700 h-7">
+              <Button variant="ghost" size="sm" onClick={markAllRead} className="text-xs text-emerald-600 hover:text-emerald-700 h-7">
                 Mark all read
               </Button>
             )}
@@ -197,50 +116,36 @@ export function NotificationCenter({ className = "" }: NotificationCenterProps) 
               </div>
             ) : (
               <div className="divide-y">
-                {notifications.map((n) => (
-                  <div
-                    key={n.id}
-                    className={`px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer ${!n.read ? "bg-blue-50/40 border-l-2 border-l-blue-400" : ""}`}
-                    onClick={() => markAsRead(n.id)}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5">{typeIcon(n.type)}</div>
+                {notifications.map(n => {
+                  const meta = TYPE_ICON[n.notif_type] || TYPE_ICON.general;
+                  const Icon = meta.icon;
+                  return (
+                    <div
+                      key={n.id}
+                      className={`flex gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors ${!n.is_read ? "bg-blue-50/40" : ""}`}
+                      onClick={() => !n.is_read && markRead(n.id)}
+                    >
+                      <div className="mt-0.5 flex-shrink-0">
+                        <Icon className={`w-4 h-4 ${meta.color}`} />
+                      </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          {catIcon(n.category)}
-                          <p className="text-sm font-medium text-gray-900 truncate">{n.title}</p>
-                          {!n.read && <span className="w-1.5 h-1.5 bg-blue-500 rounded-full flex-shrink-0" />}
-                        </div>
-                        <p className="text-xs text-gray-600 mb-1.5 leading-relaxed">{n.message}</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-400">{timeAgo(n.timestamp)}</span>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); remove(n.id); }}
-                            className="text-gray-300 hover:text-red-500 transition-colors p-0.5 rounded"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
+                        <p className={`text-sm ${!n.is_read ? "font-semibold text-gray-900" : "font-medium text-gray-700"}`}>
+                          {n.title}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.message}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs text-gray-400">{timeAgo(n.created_at)}</span>
+                          <span className="text-xs text-gray-300">·</span>
+                          <span className="text-xs text-gray-400">from {n.sender_name}</span>
                         </div>
                       </div>
+                      {!n.is_read && <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </ScrollArea>
-
-          {notifications.length > 0 && (
-            <>
-              <Separator />
-              <div className="p-3">
-                <Button variant="ghost" size="sm"
-                  className="w-full text-gray-500 hover:text-gray-700 text-xs"
-                  onClick={() => { remove("all"); setNotifications([]); }}>
-                  Clear all notifications
-                </Button>
-              </div>
-            </>
-          )}
         </SheetContent>
       </Sheet>
     </>

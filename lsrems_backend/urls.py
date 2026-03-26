@@ -28,6 +28,7 @@ urlpatterns = [
     path('api/', include('properties.urls')),
     path('api/transactions/', include('transactions.urls')),
     path('api/', include('expenses.urls')),
+    path('api/', include('notify.urls')),
     path('api/dashboard/stats/', dashboard_stats, name='dashboard-stats'),
     path('api/reports/stats/', reports_stats, name='reports-stats'),
 ]

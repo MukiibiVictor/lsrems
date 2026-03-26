@@ -6,6 +6,7 @@ from django.http import FileResponse
 from django.utils import timezone
 from .models import SurveyProject, ProjectUpdate, LandTitle
 from .serializers import SurveyProjectSerializer, ProjectUpdateSerializer, LandTitleSerializer
+from notify.models import notify_user, notify_all_staff
 
 
 class SurveyProjectViewSet(viewsets.ModelViewSet):
@@ -15,6 +16,29 @@ class SurveyProjectViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['project_name', 'location', 'customer__name']
     ordering_fields = ['created_at', 'updated_at', 'status']
+
+    def perform_create(self, serializer):
+        project = serializer.save()
+        notify_all_staff(
+            title=f'New Project: {project.project_name}',
+            message=f'A new survey project "{project.project_name}" in {project.location} has been created.',
+            notif_type='new_project',
+            sender=self.request.user,
+            project_id=project.id,
+        )
+
+    def perform_update(self, serializer):
+        old = self.get_object()
+        old_status = old.status
+        project = serializer.save()
+        if project.status != old_status:
+            notify_all_staff(
+                title=f'Project Status Updated: {project.project_name}',
+                message=f'"{project.project_name}" status changed from {old_status.replace("_"," ")} to {project.status.replace("_"," ")}.',
+                notif_type='project_status',
+                sender=self.request.user,
+                project_id=project.id,
+            )
 
     @action(detail=False, methods=['get'], url_path='unassigned')
     def unassigned(self, request):
@@ -44,6 +68,15 @@ class SurveyProjectViewSet(viewsets.ModelViewSet):
         project.surveyor = request.user
         project.status = 'survey_in_progress'
         project.save()
+        # Notify all admins/managers that someone claimed the project
+        notify_all_staff(
+            title=f'Project Claimed: {project.project_name}',
+            message=f'{request.user.get_full_name() or request.user.username} has claimed project "{project.project_name}" and started work.',
+            notif_type='project_claimed',
+            sender=request.user,
+            exclude_user=request.user,
+            project_id=project.id,
+        )
         serializer = self.get_serializer(project)
         return Response(serializer.data)
 
@@ -64,6 +97,24 @@ class SurveyProjectViewSet(viewsets.ModelViewSet):
         if project.status == 'pending':
             project.status = 'survey_in_progress'
         project.save()
+        # Notify the assigned user
+        notify_user(
+            recipient=assignee,
+            title=f'You have been assigned: {project.project_name}',
+            message=f'You have been assigned to project "{project.project_name}" in {project.location}. Please review and begin work.',
+            notif_type='project_assigned',
+            sender=request.user,
+            project_id=project.id,
+        )
+        # Notify all other staff
+        notify_all_staff(
+            title=f'Project Assigned: {project.project_name}',
+            message=f'{assignee.get_full_name() or assignee.username} has been assigned to "{project.project_name}".',
+            notif_type='project_assigned',
+            sender=request.user,
+            exclude_user=assignee,
+            project_id=project.id,
+        )
         serializer = self.get_serializer(project)
         return Response(serializer.data)
 
@@ -82,12 +133,19 @@ class SurveyProjectViewSet(viewsets.ModelViewSet):
         project.completed_at = timezone.now()
         project.completed_by = request.user
         project.save()
-        # Log a project update
         ProjectUpdate.objects.create(
             project=project,
             status='completed',
             notes=notes or 'Project marked as completed.',
             updated_by=request.user,
+        )
+        # Notify all staff
+        notify_all_staff(
+            title=f'Project Completed: {project.project_name}',
+            message=f'"{project.project_name}" has been marked as completed by {request.user.get_full_name() or request.user.username}.',
+            notif_type='project_completed',
+            sender=request.user,
+            project_id=project.id,
         )
         serializer = self.get_serializer(project)
         return Response(serializer.data)

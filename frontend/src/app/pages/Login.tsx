@@ -171,9 +171,12 @@ export function Login() {
           <div className="mt-8 pt-8 border-t border-white/5 space-y-4">
             <p className="text-center text-sm text-gray-500">
               Don't have an account?{" "}
-              <a href="#" className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors">
+              <button
+                onClick={() => window.open(`https://wa.me/256751768901?text=${encodeURIComponent("Hello! I need help accessing the LSREMS system. Can you create an account for me?")}`, "_blank")}
+                className="text-emerald-400 hover:text-emerald-300 font-medium transition-colors"
+              >
                 Contact Administrator
-              </a>
+              </button>
             </p>
             <div className="flex justify-center">
               <WhatsAppContact

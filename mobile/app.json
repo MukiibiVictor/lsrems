@@ -1,7 +1,7 @@
-{
+﻿{
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "LSREMS",
+    "slug": "lsrems",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -28,3 +28,4 @@
     }
   }
 }
+

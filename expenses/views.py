@@ -3,6 +3,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Expense
 from .serializers import ExpenseSerializer
 from accounts.permissions import IsAdminOrWorker
+from notify.models import notify_all_staff
 
 
 class ExpenseViewSet(viewsets.ModelViewSet):
@@ -14,10 +15,16 @@ class ExpenseViewSet(viewsets.ModelViewSet):
     ordering_fields = ['expense_date', 'amount', 'created_at']
 
     def get_permissions(self):
-        # Only admin/worker can create, update, delete
         if self.action in ['create', 'update', 'partial_update', 'destroy']:
             return [IsAuthenticated(), IsAdminOrWorker()]
         return [IsAuthenticated()]
 
     def perform_create(self, serializer):
-        serializer.save(recorded_by=self.request.user)
+        expense = serializer.save(recorded_by=self.request.user)
+        notify_all_staff(
+            title=f'New Expense: {expense.title}',
+            message=f'UGX {expense.amount:,.0f} recorded for "{expense.title}" ({expense.category}).',
+            notif_type='new_expense',
+            sender=self.request.user,
+            exclude_user=self.request.user,
+        )

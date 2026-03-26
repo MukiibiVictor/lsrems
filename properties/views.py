@@ -6,6 +6,7 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import Property, PropertyImage, PropertyListing
 from .serializers import PropertySerializer, PropertyImageSerializer, PropertyListingSerializer
+from notify.models import notify_all_staff
 
 
 class PropertyViewSet(viewsets.ModelViewSet):
@@ -14,6 +15,16 @@ class PropertyViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['property_name', 'location', 'description']
     ordering_fields = ['created_at', 'property_name', 'price']
+
+    def perform_create(self, serializer):
+        prop = serializer.save()
+        notify_all_staff(
+            title=f'New Property Added: {prop.property_name}',
+            message=f'A new {prop.property_type} property "{prop.property_name}" in {prop.location} has been added.',
+            notif_type='new_property',
+            sender=self.request.user if self.request.user.is_authenticated else None,
+            property_id=prop.id,
+        )
 
     def get_queryset(self):
         qs = Property.objects.prefetch_related('images').all()

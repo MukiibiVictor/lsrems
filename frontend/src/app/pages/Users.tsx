@@ -76,13 +76,7 @@ export function Users() {
 
   const loadUsers = async () => {
     try {
-      console.log('Loading users...');
-      const token = localStorage.getItem('auth_token');
-      console.log('Token available:', !!token);
-      
       const response = await apiClient.get<PaginatedResponse<User>>("/users/");
-      console.log('Users loaded successfully:', response);
-      // Handle paginated response
       const usersList = response.results || response;
       setUsers(Array.isArray(usersList) ? usersList : []);
     } catch (error) {
@@ -102,10 +96,6 @@ export function Users() {
     e.preventDefault();
     setIsLoading(true);
     try {
-      console.log('Creating user with data:', formData);
-      const token = localStorage.getItem('auth_token');
-      console.log('Token available for create:', !!token);
-      
       await apiClient.post("/users/", formData);
       toast.success("User created successfully!");
       setIsCreateOpen(false);
